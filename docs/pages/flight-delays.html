@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Flight Delays | Sophie Schöneberg</title>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;1,400&display=swap"
+        rel="stylesheet"
+    >
+
+<style>
+    /* =================================
+       THEME VARIABLES
+       ================================= */
+
+    :root {
+        --bg-color: #000000;
+        --bg-secondary: #000000;
+        --card-bg: #050505;
+
+        --text-main: #ffffff;
+        --text-muted: #d4d4d4;
+
+        --accent-color: #00a4ef;
+        --accent-bright: #0078d4;
+        --accent-glow: rgba(0, 164, 239, 0.18);
+
+        --border-color: #333333;
+        --border-strong: #666666;
+
+        --shadow-color: rgba(0, 0, 0, 0.8);
+
+        /* PyCharm UI simulation */
+        --pycharm-bg: #1e1f22;
+        --pycharm-header: #2b2d30;
+        --pycharm-border: #393b40;
+        --pycharm-tab-active: #1e1f22;
+        --pycharm-gutter-bg: #1e1f22;
+        --pycharm-gutter-text: #7a7a7a;
+        --pycharm-keyword: #cc7832;
+        --pycharm-string: #6a8759;
+        --pycharm-function: #ffc66d;
+        --pycharm-number: #6897bb;
+        --pycharm-comment: #808080;
+        --pycharm-variable: #a9b7c6;
+    }
+
+    /* =================================
+       GLOBAL
+       ================================= */
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        min-height: 100vh;
+        padding: 0 1.25rem 2rem;
+
+        background: var(--bg-color);
+        color: var(--text-main);
+
+        font-family: "JetBrains Mono", monospace;
+        line-height: 1.6;
+    }
+
+    /* =================================
+       POWER SHELL TERMINAL
+       ================================= */
+
+    .cctv-monitor {
+        position: sticky;
+        top: 0.75rem;
+        z-index: 100;
+
+        max-width: 1240px;
+        margin: 1rem auto 0;
+
+        overflow: hidden;
+
+        background: #000000;
+        border: 1px solid var(--border-color);
+        border-radius: 3px;
+
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8);
+    }
+
+    /* =================================
+       TERMINAL TITLE BAR
+       ================================= */
+
+    .monitor-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        height: 32px;
+        padding: 0 0.7rem;
+
+        background: #111111;
+        color: #dcdcdc;
+
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 0.75rem;
+
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .monitor-title {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+    }
+
+    .ps-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 17px;
+        height: 17px;
+
+        color: var(--accent-color);
+
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    /* =================================
+       WINDOW CONTROLS
+       ================================= */
+
+    .window-controls {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .window-dot {
+        width: 7px;
+        height: 7px;
+
+        background: #555555;
+        border-radius: 50%;
+    }
+
+    /* =================================
+       TERMINAL BODY
+       ================================= */
+
+    .terminal-body {
+        height: 145px;
+        min-height: 145px;
+        max-height: 145px;
+
+        padding: 0.85rem 1rem;
+
+        overflow: hidden;
+
+        background: #000000;
+        color: #ffffff;
+
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.82rem;
+
+        cursor: text;
+    }
+
+    .terminal-output {
+        margin-bottom: 0.35rem;
+        line-height: 1.45;
+    }
+
+    /* =================================
+       COMMAND COLORS
+       ================================= */
+
+    .command-list,
+    .command-highlight {
+        color: var(--accent-color);
+        font-weight: 700;
+    }
+
+    /* =================================
+       TERMINAL INPUT
+       ================================= */
+
+    .terminal-input-line {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+
+        white-space: nowrap;
+    }
+
+    .prompt {
+        color: #ffffff;
+        font-weight: 400;
+        white-space: nowrap;
+    }
+
+    .terminal-input-line input {
+        width: 100%;
+
+        background: transparent;
+        border: none;
+        outline: none;
+
+        color: #ffffff;
+
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.82rem;
+    }
+
+    .terminal-input-line input::placeholder {
+        color: #555555;
+    }
+
+    /* =================================
+       MAIN CONTAINER
+       ================================= */
+
+    .container {
+        position: relative;
+        z-index: 2;
+
+        max-width: 1100px;
+        margin: 2rem auto 0;
+    }
+
+    /* =================================
+       HEADER
+       ================================= */
+
+    header {
+        margin-bottom: 2.5rem;
+        padding: 2.5rem 0 2rem;
+
+        text-align: center;
+
+        border-bottom: 1px dashed var(--border-color);
+    }
+
+    header h1 {
+        margin-bottom: 0.75rem;
+
+        color: var(--accent-color);
+
+        font-size: 2.1rem;
+        line-height: 1.25;
+    }
+
+    header p {
+        margin-bottom: 0;
+
+        color: var(--text-muted);
+
+        font-size: 0.82rem;
+    }
+
+    /* =================================
+       CARDS
+       ================================= */
+
+    .card {
+        position: relative;
+
+        margin-top: 2rem;
+        padding: 2rem 2.25rem;
+
+        overflow: hidden;
+
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 2px;
+
+        box-shadow: 0 3px 12px var(--shadow-color);
+    }
+
+    .card::before {
+        content: "";
+
+        position: absolute;
+        top: 0;
+        left: 0;
+
+        width: 3px;
+        height: 100%;
+
+        background: var(--accent-color);
+        opacity: 0.45;
+    }
+
+    /* =================================
+       HEADINGS
+       ================================= */
+
+    h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+
+        margin: 2rem 0 1rem;
+
+        color: var(--accent-color);
+
+        font-size: 1.15rem;
+    }
+
+    h2::before {
+        content: "[+]";
+
+        font-size: 0.9rem;
+    }
+
+    h2::after {
+        content: "";
+
+        flex: 1;
+        height: 1px;
+
+        background: var(--border-color);
+    }
+
+    .card h3 {
+        margin-bottom: 1rem;
+
+        color: var(--accent-color);
+
+        font-size: 1.05rem;
+    }
+
+    /* =================================
+       TEXT
+       ================================= */
+
+    p {
+        margin-bottom: 1.2rem;
+
+        color: var(--text-muted);
+
+        font-size: 0.82rem;
+        line-height: 1.7;
+    }
+
+    strong {
+        color: var(--text-main);
+    }
+
+    /* =================================
+       FIGURES
+       ================================= */
+
+    .correlation-figure,
+    .thesis-figure {
+        max-width: 100%;
+        margin: 1.5em 0;
+        text-align: center;
+    }
+
+    .correlation-figure img,
+    .thesis-figure img {
+        width: 65%;
+        max-width: 65%;
+        height: auto;
+
+        border: 1px solid var(--border-color);
+        border-radius: 2px;
+
+        display: none;
+    }
+
+    /* Dark theme is the only theme on this page */
+    .theme-img-dark {
+        display: block;
+        margin: 0 auto;
+    }
+
+    figcaption {
+        margin-top: 0.6rem;
+
+        color: var(--text-muted);
+
+        font-size: 0.7rem;
+        font-style: italic;
+    }
+
+    /* =================================
+       ACTION BUTTONS
+       ================================= */
+
+    .btn-action {
+        display: inline-block;
+
+        margin-top: 1rem;
+        margin-right: 0.5rem;
+        padding: 0.6rem 1.1rem;
+
+        background: #050505;
+        border: 1px solid var(--border-color);
+        border-left: 3px solid var(--accent-color);
+        border-radius: 2px;
+
+        color: var(--accent-color);
+        text-decoration: none;
+
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .btn-action:hover {
+        border-color: var(--border-strong);
+        border-left-color: var(--accent-bright);
+        color: var(--text-main);
+    }
+
+    /* =================================
+       FIGURE + DOWNLOAD ROW
+       ================================= */
+
+    .figure-download-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+
+        gap: 2rem;
+        margin: 1.5em 0;
+    }
+
+    .figure-download-row .correlation-figure {
+        flex: 1;
+        margin: 0;
+        text-align: right;
+    }
+
+    .figure-download-row .correlation-figure img {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 0 0 auto;
+    }
+
+    .download-action-container {
+        flex: 1;
+        text-align: left;
+    }
+
+    /* =================================
+       HIGHLIGHT BOX
+       ================================= */
+
+    .highlight-box {
+        margin-top: 1.5rem;
+        padding: 1.2rem 1.35rem;
+
+        background: #050505;
+
+        border: 1px solid var(--border-color);
+        border-left: 3px solid var(--accent-color);
+        border-radius: 2px;
+
+        color: var(--text-main);
+
+        font-size: 0.82rem;
+        line-height: 1.7;
+
+        box-shadow: 0 3px 12px var(--shadow-color);
+    }
+
+    /* =================================
+       PYCHARM EDITOR WIDGET
+       ================================= */
+
+    .pycharm-editor {
+        margin: 1.5rem 0;
+
+        overflow: hidden;
+
+        background-color: var(--pycharm-bg);
+        border: 1px solid var(--pycharm-border);
+        border-radius: 3px;
+
+        box-shadow: 0 3px 12px var(--shadow-color);
+
+        font-family: "JetBrains Mono", monospace;
+    }
+
+    .pycharm-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        padding: 0.4rem 0.8rem;
+
+        background-color: var(--pycharm-header);
+        border-bottom: 1px solid var(--pycharm-border);
+
+        color: var(--text-muted);
+
+        font-size: 0.68rem;
+    }
+
+    .pycharm-window-controls {
+        display: flex;
+        gap: 6px;
+    }
+
+    .pycharm-dot {
+        display: inline-block;
+
+        width: 9px;
+        height: 9px;
+
+        border-radius: 50%;
+    }
+
+    .pycharm-dot-red { background-color: #ff5f56; }
+    .pycharm-dot-yellow { background-color: #ffbd2e; }
+    .pycharm-dot-green { background-color: #27c93f; }
+
+    .pycharm-tabs {
+        display: flex;
+        overflow-x: auto;
+
+        background-color: var(--pycharm-header);
+        border-bottom: 1px solid var(--pycharm-border);
+    }
+
+    .pycharm-tab {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+
+        padding: 0.45rem 1rem;
+
+        background-color: var(--pycharm-header);
+        border-right: 1px solid var(--pycharm-border);
+
+        color: var(--text-muted);
+
+        font-size: 0.7rem;
+    }
+
+    .pycharm-tab.active {
+        background-color: var(--pycharm-tab-active);
+        border-top: 2px solid var(--accent-color);
+        border-bottom: 1px solid var(--pycharm-bg);
+
+        color: var(--text-main);
+        font-weight: 700;
+    }
+
+    .pycharm-body {
+        display: flex;
+
+        max-height: 280px;
+        padding: 0.8rem 0;
+
+        overflow-y: auto;
+
+        background-color: var(--pycharm-bg);
+    }
+
+    .pycharm-gutter {
+        width: 45px;
+        padding-right: 12px;
+
+        text-align: right;
+        user-select: none;
+
+        background-color: var(--pycharm-gutter-bg);
+        color: var(--pycharm-gutter-text);
+
+        font-size: 0.7rem;
+        line-height: 1.5;
+    }
+
+    .pycharm-code-content {
+        flex: 1;
+        padding-right: 1rem;
+
+        overflow-x: auto;
+        white-space: pre;
+
+        font-size: 0.73rem;
+        line-height: 1.5;
+    }
+
+    /* PyCharm syntax highlighting */
+    .py-keyword { color: var(--pycharm-keyword); font-weight: 600; }
+    .py-string { color: var(--pycharm-string); }
+    .py-function { color: var(--pycharm-function); }
+    .py-number { color: var(--pycharm-number); }
+    .py-comment { color: var(--pycharm-comment); font-style: italic; }
+    .py-variable { color: var(--pycharm-variable); }
+
+    /* =================================
+       R CONSOLE DROPDOWN
+       ================================= */
+
+    .r-console-dropdown {
+        margin: 1.5rem 0;
+
+        overflow: hidden;
+
+        background-color: #050505;
+        border: 1px solid var(--border-color);
+        border-radius: 3px;
+
+        box-shadow: 0 3px 12px var(--shadow-color);
+
+        font-family: Consolas, "Courier New", monospace;
+    }
+
+    .r-console-dropdown summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        padding: 0.7rem 1rem;
+
+        background-color: #111111;
+        border-bottom: 1px solid var(--border-color);
+
+        color: var(--text-muted);
+
+        font-size: 0.75rem;
+
+        cursor: pointer;
+        user-select: none;
+        outline: none;
+    }
+
+    .r-console-dropdown summary:hover {
+        background-color: #181818;
+        color: var(--text-main);
+    }
+
+    .r-console-dropdown summary::before {
+        content: "R";
+
+        display: inline-block;
+
+        padding: 2px 6px;
+
+        background-color: var(--accent-color);
+        border-radius: 2px;
+
+        color: #000000;
+
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .r-console-scroll-container {
+        max-height: 400px;
+        padding: 1rem;
+
+        overflow-y: auto;
+
+        background-color: #050505;
+    }
+
+    .r-console-scroll-container pre {
+        margin: 0;
+
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .r-console-scroll-container code {
+        color: var(--text-muted);
+
+        font-size: 0.75rem;
+        line-height: 1.55;
+    }
+
+    /* =================================
+       FOOTER
+       ================================= */
+
+    footer {
+        margin-top: 3rem;
+        padding-top: 1.25rem;
+
+        text-align: center;
+
+        color: var(--text-muted);
+
+        font-size: 0.65rem;
+
+        border-top: 1px dashed var(--border-color);
+    }
+
+    footer p {
+        margin-bottom: 0.4rem;
+        font-size: 0.65rem;
+    }
+
+    footer strong {
+        color: var(--accent-color);
+    }
+
+    .legal-disclaimer {
+        margin-top: 1rem;
+
+        color: var(--text-muted);
+        opacity: 0.8;
+
+        font-size: 0.62rem;
+        font-family: "JetBrains Mono", monospace;
+    }
+
+    /* =================================
+       PRINT
+       ================================= */
+
+    @media print {
+        .cctv-monitor {
+            display: none;
+        }
+
+        body {
+            background: #ffffff;
+            color: #111111;
+        }
+
+        .card {
+            border: 1px solid #cccccc;
+            box-shadow: none;
+        }
+    }
+
+    /* =================================
+       TABLET / MOBILE
+       ================================= */
+
+    @media (max-width: 800px) {
+        body {
+            padding: 0 0.75rem 1.5rem;
+        }
+
+        .cctv-monitor {
+            position: relative;
+            top: 0;
+
+            margin-top: 0.5rem;
+        }
+
+        .card {
+            padding: 1.5rem;
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+        }
+
+        .figure-download-row .correlation-figure {
+            text-align: center;
+        }
+
+        .correlation-figure img,
+        .thesis-figure img {
+            width: 100%;
+            max-width: 100%;
+        }
+    }
+
+    @media (max-width: 500px) {
+        .monitor-top {
+            min-height: 32px;
+            height: auto;
+
+            padding: 0.45rem 0.7rem;
+        }
+
+        .terminal-body {
+            padding: 0.75rem;
+            font-size: 0.72rem;
+        }
+
+        .terminal-input-line input,
+        .prompt {
+            font-size: 0.72rem;
+        }
+
+        .card {
+            padding: 1.25rem;
+        }
+
+        header h1 {
+            font-size: 1.35rem;
+        }
+    }
+</style>
+
+</head>
+
+<body>
+
+<!-- =================================
+     POWER SHELL TERMINAL
+     ================================= -->
+
+<nav
+    class="cctv-monitor"
+    aria-label="Portfolio terminal navigation"
+>
+    <div class="monitor-top">
+
+        <div class="monitor-title">
+            <span class="ps-icon" aria-hidden="true">PS&gt;</span>
+
+            <span>Portfolio Terminal</span>
+        </div>
+
+        <div
+            class="window-controls"
+            aria-hidden="true"
+        >
+            <span class="window-dot"></span>
+            <span class="window-dot"></span>
+            <span class="window-dot"></span>
+        </div>
+
+    </div>
+
+    <div
+        class="terminal-body"
+        id="terminal-body"
+        role="region"
+        aria-label="Portfolio terminal"
+    >
+
+        <div
+            class="terminal-output"
+            id="terminal-output"
+            aria-live="polite"
+        >
+            Portfolio Terminal<br><br>
+
+            Current page:
+            <span class="command-highlight">flight-delays</span>
+
+            <br><br>
+
+            Available commands:
+            <span class="command-list">home&nbsp;&nbsp; aboutme&nbsp;&nbsp; resume</span>
+
+            <br>
+
+            Type
+            <span class="command-highlight">help</span>
+            for more options.
+
+            <br><br>
+        </div>
+
+        <form
+            class="terminal-input-line"
+            id="terminal-form"
+        >
+            <label
+                class="prompt"
+                for="terminal-input"
+            >
+               PS C:\Portfolio>
+            </label>
+
+            <input
+                type="text"
+                id="terminal-input"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="PowerShell command input"
+            >
+        </form>
+
+    </div>
+</nav>
+
+<!-- =================================
+     MAIN CONTENT
+     ================================= -->
+
+<main class="container">
+
+    <!-- =================================
+         HEADER
+         ================================= -->
+
+    <header>
+
+        <h1>
+            Machine Learning for Weather-Related
+            Flight Delays across US Airports
+        </h1>
+
+        <p>Independent Project</p>
+
+    </header>
+
+    <!-- =================================
+         OVERVIEW
+         ================================= -->
+
+    <section id="abstract">
+
+        <h2>Overview</h2>
+
+        <!-- =================================
+             KEY IMPLICATIONS
+             ================================= -->
+
+        <article class="card">
+
+            <h3>Key Implications &amp; Contributions</h3>
+
+            <p>
+                In aviation, weather is one of the primary variables,
+                alongside logistics, that impact whether or not flights
+                will be delayed. Just this year, all flights in New York
+                City were cancelled for days due to a massive blizzard
+                hitting the region, as such monitoring weather is
+                critical for companies.
+            </p>
+
+            <!-- Centered interactive map -->
+            <div style="display: flex; justify-content: center; margin-top: 20px;">
+                <div style="width: 100%; max-width: 700px; border: 1px solid #333333; border-radius: 2px; overflow: hidden; background: #050505;">
+                    <iframe
+                        src="us_flight_plotly_map.html"
+                        width="100%"
+                        height="450px"
+                        style="border: none; display: block;"
+                        title="US flight delay map"
+                    ></iframe>
+                </div>
+            </div>
+
+        </article>
+
+        <!-- =================================
+             MODEL ASSUMPTIONS
+             ================================= -->
+
+        <article class="card">
+
+            <h3>Model Assumptions</h3>
+
+            <p>
+                Importantly, this model only looks at weather
+                <strong>and</strong> whether or not there was a delay.
+                This means the prediction is essentially a Yes/No
+                decision variable. A <strong>Logistic Regression</strong>
+                is used to handle the ~300,000 samples taken from the
+                dataset and ensures randomisation and avoiding
+                over-fitting the data.
+                <br>
+                Because the numerical weather variables have vastly
+                different scales (the average for wind might be 36km/h,
+                while the average for rain could be 3.6ml/m²),
+                <strong>StandardScaler</strong> is used to standardise
+                the variables by creating the same mean of 0 and a
+                standard deviation of 1, so the model won't weigh them
+                differently.
+            </p>
+
+        </article>
+
+        <!-- =================================
+             CORRELATION ANALYSIS
+             ================================= -->
+
+        <article class="card">
+
+            <h3>Correlation Analysis</h3>
+
+            <p>
+                Data is sourced from open-source data, such as the
+                U.S. Bureau of Statistics and the National Centers for
+                Environmental Information. Relevant indicators, such as
+                time of departure/arrival and climate data are isolated.
+                <br>
+                A simple correlation analysis shows how similar the
+                variables are to each other. Correlation is necessary to
+                ensure machine learning can find differences in data
+                structures upon which it differentiates and categorises
+                it later on. Below you can see which variables fit those
+                criteria. The correlation test was only done for one
+                month (February 2026) for the John F. Kennedy Airport
+                (JFK) in New York, however, has later been verified in
+                the extended timeframe with more data entries and
+                remains robust.
+            </p>
+
+            <!-- Side-by-side figure and download -->
+            <div class="figure-download-row">
+
+                <figure class="correlation-figure">
+
+                    <img
+                        src="corr_heatmap_dark.png"
+                        alt="Correlation Analysis - Dark Mode"
+                        class="theme-img-dark"
+                    >
+
+                    <figcaption>
+                        Figure 1: Correlation Analysis of Flight Logs
+                        and Weather Statistics.
+                    </figcaption>
+
+                </figure>
+
+                <div class="download-action-container">
+
+                    <h3 style="margin-top: 0;">
+                        Inspect or download data set
+                    </h3>
+
+                    <p>
+                        Access the underlying processing and correlation
+                        analysis script below, or download the raw files
+                        directly.
+                    </p>
+
+                    <a
+                        href="correlation_data.r"
+                        class="btn-action"
+                        download
+                    >
+                        ↓ Download .R
+                    </a>
+
+                </div>
+
+            </div>
+
+            <!-- R console dropdown -->
+            <details class="r-console-dropdown">
+
+                <summary>View R Script Execution</summary>
+
+                <div class="r-console-scroll-container">
+<pre><code># Load required libraries
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(reshape2)
+
+us_flight_data &lt;- read_csv("us_flight_data.csv")
+us_weather_data &lt;- read_csv("us_weather_data.csv")
+
+# filter for date (February 2026)
+jfk_weather &lt;- us_weather_data %&gt;%
+  filter(station_id == "USW00094789", date &gt;= 20260201, date &lt;= 20260228) %&gt;%
+  mutate(DAY_OF_MONTH = date %% 100)
+
+feb_flights &lt;- us_flight_data %&gt;%
+  filter(YEAR == 2026, MONTH == 2)
+
+weather_wide &lt;- jfk_weather %&gt;%
+  pivot_wider(id_cols = DAY_OF_MONTH, names_from = element, values_from = value)
+
+# daily mean departure delays from JFK
+# I aggregate by day to avoid copies of the same data entries, though the
+# trade-off here is sample size (N=28 for every day)
+# analysis for 6-months and multiple airports confirm the correlation results
+jfk_dep &lt;- feb_flights %&gt;%
+  filter(ORIGIN == "JFK") %&gt;%
+  group_by(DAY_OF_MONTH) %&gt;%
+  # here the median is used to avoid distortion of data due to outliers (think a
+  # single delay of 3 hours)
+   summarise(mean_dep_delay = median(DEP_DELAY, na.rm = TRUE))
+
+# daily mean arrival delays to JFK
+jfk_arr &lt;- feb_flights %&gt;%
+  filter(DEST == "JFK") %&gt;%
+  group_by(DAY_OF_MONTH) %&gt;%
+  summarise(mean_arr_delay = median(ARR_DELAY, na.rm = TRUE))
+
+jfk_analysis &lt;- weather_wide %&gt;%
+  inner_join(jfk_dep, by = "DAY_OF_MONTH") %&gt;%
+  inner_join(jfk_arr, by = "DAY_OF_MONTH")
+
+# cumulative indicators
+jfk_interactions &lt;- jfk_analysis %&gt;%
+  mutate(
+    # Wind + Rain (Combined wet and windy conditions)
+    wind_plus_rain = AWND + PRCP,
+
+    # Rain + TMin (Wet and cold conditions)
+    rain_plus_tmin = PRCP + TMIN,
+
+    # Snow + TMin (Deep winter / sub-zero snowy conditions)
+    snow_plus_tmin = SNOW + TMIN,
+
+    # Multi-hazard composite: Rain + Snow + TMin (Severe winter storm index)
+    rain_snow_tmin = PRCP + SNOW + TMIN
+  )
+
+# narrow down to just the variables going into the correlation matrix
+selected_vars_flight &lt;- jfk_interactions %&gt;%
+  select(any_of(c("mean_dep_delay", "mean_arr_delay", "PRCP", "SNOW", "TMIN", "TMAX", "AWND",
+                  "wind_plus_rain", "rain_plus_tmin", "snow_plus_tmin", "rain_snow_tmin")))
+
+# calculation of Pearson's r across all variables (weather-vs-weather,
+# delay-vs-delay, and weather-vs-delay all included)
+comprehensive_cor_matrix &lt;- cor(selected_vars_flight, use = "pairwise.complete.obs")
+
+# keep only the upper triangle + diagonal so each pair (e.g. PRCP vs SNOW)
+# appears once instead of twice (mirrored) in the melted/plotted output
+cor_matrix_triangle &lt;- comprehensive_cor_matrix
+cor_matrix_triangle[lower.tri(cor_matrix_triangle)] &lt;- NA
+
+cor_melted_full &lt;- melt(cor_matrix_triangle, na.rm = TRUE)
+names(cor_melted_full) &lt;- c("Var1", "Var2", "value")
+
+print(cor_melted_full)</code></pre>
+                </div>
+
+            </details>
+
+            <br>
+
+            <p>
+                Now using RandomForest, a correlation analysis is
+                technically not necessary because RandomForest models are
+                mathematically robust to multicollinearity, however, I
+                still like to inspect it to see if multiple features are
+                highly correlated. RandomForest will split feature
+                importance between highly correlated features and
+                artificially lower them. So, looking at highly correlated
+                variables lets me know which variables to remove to reduce
+                memory usage (though this is of course optional, the model
+                will still work fine regardless).
+            </p>
+
+        </article>
+
+        <!-- =================================
+             MACHINE LEARNING
+             ================================= -->
+
+        <article class="card">
+
+            <h3>Machine Learning</h3>
+
+            <p>
+                The goal with this project is to predict flight delays
+                using weather. Of course, a major predictor of flight
+                delays upon arrival is flight delay upon departure, i.e.
+                the best predictor for whether or not a flight will
+                arrive delayed at its destination is if it left its
+                origin airport already delayed.
+                <br>
+                The weather model focuses on any flights to an arrival
+                airport with more than 15 minutes of delay. While the
+                code is a lot longer due to data wrangling, the actual
+                machine learning model is rather short. 80% of the data
+                is used for training, while the remaining data is used
+                for testing the model. Most importantly, the RandomForest
+                ensemble is built from 100 independent decision trees.
+                Unlike Deutsche Bahn, a minority of flights are delayed,
+                so a balanced class weight ensures the model treats both
+                on-time and delayed flights as equally important. This
+                machine learning project is of course a binary count of
+                flight delays (yes or no); while the U.S. Bureau of
+                Statistics also records exact amount of delays, a next
+                step would be seeing how accurate predictions of flight
+                delays can be. For now, any flight delayed more than 15
+                minutes is basically the same, irrespective of the exact
+                amount of delay, whether that would be 20 or 280 minutes.
+                In the world of aviation, these two flights are of course
+                not equal.
+                <br>
+                Data from 2-days prior (e.g. 5th and 6th of January) is
+                used to predict whether or not a flight is delayed (e.g.
+                for January 7th). Of course not only the weather at the
+                destination airport matters, but also at the origin
+                airport. So an aeroplane leaving LAX to JFK will be
+                impacted by weather anomalies both at LAX and at JFK, and
+                this is accounted for in the model.
+                <br>
+                Since this model relies exclusively on weather data, it
+                will naturally never reach 100% (or even 90%) accuracy.
+                Flight delays are driven by a massive web of non-weather
+                factors — such as air traffic control congestion,
+                mechanical failures, crew scheduling issues, and airline
+                turnaround times. However, it is fascinating to see how
+                strong of a predictor weather actually is on its own,
+                providing a clear signal of environmental disruption
+                across the US airspace. The overall proportion of correct
+                delay and non-delay predictions (Accuracy) is 64.38%. Out
+                of all flights the model flagged as weather-risky, about
+                22% actually experienced a delay. The model successfully
+                captures roughly a third of all actual weather-driven
+                delays. The model has an F1 Score of 25.93% compared to
+                the baseline delay rate of 19.3%.
+            </p>
+
+            <!-- Model pipeline -->
+            <div class="pycharm-editor">
+
+                <div class="pycharm-header">
+
+                    <div class="pycharm-window-controls">
+                        <span class="pycharm-dot pycharm-dot-red"></span>
+                        <span class="pycharm-dot pycharm-dot-yellow"></span>
+                        <span class="pycharm-dot pycharm-dot-green"></span>
+                    </div>
+
+                    <span>flights_delay.py - PyCharm</span>
+
+                    <span style="opacity: 0.6; font-size: 0.62rem;">Python 3.11</span>
+
+                </div>
+
+                <div class="pycharm-tabs">
+                    <div class="pycharm-tab active">
+                        <span>🐍</span> model_pipeline.py
+                    </div>
+                </div>
+
+                <div class="pycharm-body">
+
+                    <div class="pycharm-gutter">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16</div>
+
+                    <div class="pycharm-code-content"><code><span class="py-keyword">import</span> pandas <span class="py-keyword">as</span> pd
+
+<span class="py-keyword">from</span> sklearn.pipeline <span class="py-keyword">import</span> Pipeline
+<span class="py-keyword">from</span> sklearn.preprocessing <span class="py-keyword">import</span> StandardScaler
+<span class="py-keyword">from</span> sklearn.linear_model <span class="py-keyword">import</span> LogisticRegression
+<span class="py-keyword">from</span> sklearn.metrics <span class="py-keyword">import</span> (
+    accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+)
+
+january = pd.read_csv(<span class="py-string">"january_flights_with_weather.csv"</span>)
+february = pd.read_csv(<span class="py-string">"february_flights_with_weather.csv"</span>)
+
+features = [
+    <span class="py-string">"ORIGIN_AWND_lag1"</span>, <span class="py-string">"ORIGIN_AWND_lag2"</span>, <span class="py-string">"ORIGIN_PRCP_lag1"</span>, <span class="py-string">"ORIGIN_PRCP_lag2"</span>,
+    <span class="py-string">"ORIGIN_TMIN_lag1"</span>, <span class="py-string">"ORIGIN_TMIN_lag2"</span>, <span class="py-string">"ORIGIN_TMAX_lag1"</span>, <span class="py-string">"ORIGIN_TMAX_lag2"</span>,
+    <span class="py-string">"ORIGIN_SNOW_lag1"</span>, <span class="py-string">"ORIGIN_SNOW_lag2"</span>, <span class="py-string">"DEST_AWND_lag1"</span>, <span class="py-string">"DEST_AWND_lag2"</span>,
+    <span class="py-string">"DEST_PRCP_lag1"</span>, <span class="py-string">"DEST_PRCP_lag2"</span>, <span class="py-string">"DEST_TMIN_lag1"</span>, <span class="py-string">"DEST_TMIN_lag2"</span>,
+    <span class="py-string">"DEST_TMAX_lag1"</span>, <span class="py-string">"DEST_TMAX_lag2"</span>, <span class="py-string">"DEST_SNOW_lag1"</span>, <span class="py-string">"DEST_SNOW_lag2"</span>
+]
+
+<span class="py-keyword">for</span> df <span class="py-keyword">in</span> [january, february]:
+    df[<span class="py-string">"IS_DELAYED"</span>] = (pd.to_numeric(df[<span class="py-string">"ARR_DELAY"</span>], errors=<span class="py-string">"coerce"</span>) &gt;= <span class="py-number">15</span>).astype(<span class="py-keyword">int</span>)
+    df.dropna(subset=features + [<span class="py-string">"IS_DELAYED"</span>], inplace=<span class="py-keyword">True</span>)
+
+X_train, y_train = january[features], january[<span class="py-string">"IS_DELAYED"</span>]
+X_test, y_test = february[features], february[<span class="py-string">"IS_DELAYED"</span>]
+
+model = Pipeline([
+    (<span class="py-string">"scaler"</span>, StandardScaler()),
+    (<span class="py-string">"classifier"</span>, LogisticRegression(class_weight=<span class="py-string">"balanced"</span>, random_state=<span class="py-number">42</span>, max_iter=<span class="py-number">1000</span>))
+])
+
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred)
+
+print(<span class="py-string">f"Accuracy:  {accuracy:.2%}"</span>)
+print(<span class="py-string">f"Precision: {precision:.2%}"</span>)
+print(<span class="py-string">f"Recall:    {recall:.2%}"</span>)
+print(<span class="py-string">f"F1 Score:  {f1:.2%}"</span>)</code></div>
+
+                </div>
+
+            </div>
+
+            <div class="download-action-container">
+
+                <p>Above you can see the visualised results of this process.</p>
+
+                <a
+                    href="flights_delay.py"
+                    class="btn-action"
+                    download
+                >
+                    ↓ Download .py
+                </a>
+
+            </div>
+
+        </article>
+
+        <!-- =================================
+             MEMORY ISSUES
+             ================================= -->
+
+        <article class="card">
+
+            <h3>How to deal with memory issues</h3>
+
+            <p>
+                While cleaning the data, I ran into the problem that the
+                datasets were too large to effectively clean and reorder
+                the variables. Initially, because there are about 16
+                million entries in the weather dataset, this was my first
+                solution for the limited memory problem. I figured
+                splitting the data into chunks would be enough to make
+                sure the data can load efficiently:
+            </p>
+
+            <!-- Memory issues: pre-fix -->
+            <div class="pycharm-editor">
+
+                <div class="pycharm-header">
+
+                    <div class="pycharm-window-controls">
+                        <span class="pycharm-dot pycharm-dot-red"></span>
+                        <span class="pycharm-dot pycharm-dot-yellow"></span>
+                        <span class="pycharm-dot pycharm-dot-green"></span>
+                    </div>
+
+                    <span>memory.py - PyCharm</span>
+
+                    <span style="opacity: 0.6; font-size: 0.62rem;">Python 3.11</span>
+
+                </div>
+
+                <div class="pycharm-tabs">
+                    <div class="pycharm-tab active">
+                        <span>🐍</span> memory.py
+                    </div>
+                </div>
+
+                <div class="pycharm-body">
+
+                    <div class="pycharm-gutter">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13</div>
+
+                    <div class="pycharm-code-content"><code><span class="py-keyword">import</span> pandas <span class="py-keyword">as</span> pd
+
+flight_chunks = []
+
+<span class="py-keyword">for</span> chunk <span class="py-keyword">in</span> pd.<span class="py-function">read_csv</span>(flights_path, chunksize=<span class="py-number">50_000</span>):
+    chunk = chunk[(chunk[<span class="py-string">"YEAR"</span>] == <span class="py-number">2026</span>) &amp; (chunk[<span class="py-string">"MONTH"</span>].<span class="py-function">between</span>(<span class="py-number">1</span>, <span class="py-number">2</span>))]
+    <span class="py-keyword">if</span> <span class="py-keyword">not</span> chunk.empty:
+        flight_chunks.<span class="py-function">append</span>(chunk)
+
+flights = pd.<span class="py-function">concat</span>(flight_chunks, ignore_index=<span class="py-keyword">True</span>)
+
+<span class="py-keyword">del</span> flight_chunks</code></div>
+
+                </div>
+
+            </div>
+
+            <p>
+                However, as you can probably tell, while the data will
+                load, it will do so very slowly and eventually, will be
+                out of memory. The problem faced here is that to know
+                which rows and data to discard, they still have to be
+                read and materialised in memory. To avoid this, I use
+                DuckDB, which discards unnecessary data while reading it:
+            </p>
+
+            <!-- Memory issues: post-fix -->
+            <div class="pycharm-editor">
+
+                <div class="pycharm-header">
+
+                    <div class="pycharm-window-controls">
+                        <span class="pycharm-dot pycharm-dot-red"></span>
+                        <span class="pycharm-dot pycharm-dot-yellow"></span>
+                        <span class="pycharm-dot pycharm-dot-green"></span>
+                    </div>
+
+                    <span>memory.py - PyCharm</span>
+
+                    <span style="opacity: 0.6; font-size: 0.62rem;">Python 3.11</span>
+
+                </div>
+
+                <div class="pycharm-tabs">
+                    <div class="pycharm-tab active">
+                        <span>🐍</span> memory.py
+                    </div>
+                </div>
+
+                <div class="pycharm-body">
+
+                    <div class="pycharm-gutter">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8</div>
+
+                    <div class="pycharm-code-content"><code><span class="py-keyword">import</span> duckdb
+
+flights = duckdb.<span class="py-function">query</span>(<span class="py-string">f"""
+    SELECT YEAR, MONTH, DAY_OF_MONTH, ORIGIN, DEST, ARR_DELAY
+    FROM read_csv_auto('{flights_path}')
+    WHERE YEAR = 2026 AND MONTH BETWEEN 1 AND 2
+"""</span>).<span class="py-function">to_df</span>()</code></div>
+
+                </div>
+
+            </div>
+
+        </article>
+
+    </section>
+
+    <!-- =================================
+         FOOTER
+         ================================= -->
+
+    <footer id="contact">
+
+        <p>
+            © 2026 Sophie Schöneberg.
+            All rights reserved.
+        </p>
+
+        <p>
+            <strong>Independent Project</strong> Documentation.
+        </p>
+
+        <div class="legal-disclaimer">
+            <strong>Legal Disclaimer:</strong>
+            All original works, text, code, and project frameworks
+            presented on this portfolio are the exclusive intellectual
+            property of the author unless otherwise stated.
+        </div>
+
+    </footer>
+
+</main>
+
+<!-- =================================
+     TERMINAL JAVASCRIPT
+     ================================= -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const terminalBody = document.getElementById("terminal-body");
+        const terminalInput = document.getElementById("terminal-input");
+        const terminalForm = document.getElementById("terminal-form");
+        const terminalOutput = document.getElementById("terminal-output");
+
+        if (!terminalBody || !terminalInput || !terminalForm || !terminalOutput) {
+            return;
+        }
+
+        /*
+         * Keep the terminal focused when the terminal area is clicked.
+         */
+        terminalBody.addEventListener("click", () => {
+            terminalInput.focus();
+        });
+
+        /*
+         * Focus the input when the page loads.
+         */
+        terminalInput.focus();
+
+        /*
+         * Process terminal commands.
+         */
+        terminalForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            const rawCommand = terminalInput.value.trim();
+            const command = rawCommand.toLowerCase();
+
+            const commandLine = `
+                <br>
+                <span class="prompt">schoeneberg-sophie.github.io/portfolio/&gt;</span>
+                ${escapeHtml(rawCommand)}
+            `;
+
+            let response = "";
+
+            /* ==========================
+               HOME
+               ========================== */
+
+            if (
+                command === "home" ||
+                command === "index" ||
+                command === "index.html"
+            ) {
+                response = "<br>Opening index.html...";
+
+                terminalOutput.innerHTML += commandLine + response;
+
+                terminalInput.value = "";
+
+                setTimeout(() => {
+                    window.location.href = "../../index.html";
+                }, 400);
+
+                return;
+            }
+
+            /* ==========================
+               ABOUT ME
+               ========================== */
+
+            if (
+                command === "aboutme" ||
+                command === "about" ||
+                command === "about.html"
+            ) {
+                response = "<br>Opening about.html...";
+
+                terminalOutput.innerHTML += commandLine + response;
+
+                terminalInput.value = "";
+
+                setTimeout(() => {
+                    window.location.href = "about.html";
+                }, 400);
+
+                return;
+            }
+
+            /* ==========================
+               RESUME
+               ========================== */
+
+            if (
+                command === "resume" ||
+                command === "resume.html"
+            ) {
+                response = "<br>Opening resume.html...";
+
+                terminalOutput.innerHTML += commandLine + response;
+
+                terminalInput.value = "";
+
+                setTimeout(() => {
+                    window.location.href = "resume.html";
+                }, 400);
+
+                return;
+            }
+
+            /* ==========================
+               HELP
+               ========================== */
+
+            if (command === "help") {
+                response = `
+                    <br>
+                    Available commands:<br>
+                    &nbsp;&nbsp;home&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    Return to home page<br>
+                    &nbsp;&nbsp;aboutme&nbsp;&nbsp;
+                    Open about me page<br>
+                    &nbsp;&nbsp;resume&nbsp;&nbsp;&nbsp;
+                    Open resume page<br>
+                    &nbsp;&nbsp;clear&nbsp;&nbsp;&nbsp;&nbsp;
+                    Clear terminal<br>
+                `;
+            }
+
+            /* ==========================
+               CLEAR
+               ========================== */
+
+            else if (
+                command === "clear" ||
+                command === "cls"
+            ) {
+                terminalOutput.innerHTML = `
+                    Portfolio Terminal<br><br>
+
+                    Current page:
+                    <span class="command-highlight">flight-delays</span>
+
+                    <br><br>
+
+                    Available commands:
+                    <span class="command-list">
+                        home&nbsp;&nbsp; aboutme&nbsp;&nbsp; resume
+                    </span>
+
+                    <br>
+
+                    Type
+                    <span class="command-highlight">help</span>
+                    for more options.
+
+                    <br><br>
+                `;
+
+                terminalInput.value = "";
+                terminalInput.focus();
+
+                return;
+            }
+
+            /* ==========================
+               EMPTY COMMAND
+               ========================== */
+
+            else if (command === "") {
+                response = "";
+            }
+
+            /* ==========================
+               UNKNOWN COMMAND
+               ========================== */
+
+            else {
+                response = `
+                    <br>
+                    '${escapeHtml(rawCommand)}' is not recognized.
+                    Type 'help' to see available commands.
+                `;
+            }
+
+            terminalOutput.innerHTML +=
+                commandLine +
+                response +
+                "<br>";
+
+            terminalInput.value = "";
+            terminalInput.focus();
+
+            /*
+             * Keep the newest terminal output visible.
+             */
+            terminalBody.scrollTop = terminalBody.scrollHeight;
+        });
+    });
+
+    /* =================================
+       HTML ESCAPE FUNCTION
+       ================================= */
+
+    function escapeHtml(text) {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+</script>
+
+</body>
+</html>
